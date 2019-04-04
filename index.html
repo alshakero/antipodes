@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <link
+            rel="stylesheet"
+            href="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/css/ol.css"
+            type="text/css"
+        />
+        <style>
+            body {
+                margin: 0px;
+            }
+
+            .map {
+                height: 100vh;
+                width: 100%;
+                cursor: url('pin-in.png'), auto;
+            }
+
+            #description {
+                position: absolute;
+                top: 10px;
+                left: 10px;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                padding: 5px;
+                transform: skew(-10deg);
+                font-family: 'Courier New', Courier, monospace;
+                font-size: 0.7em
+            }
+
+            #creds {
+                position: absolute;
+                bottom: 10px;
+                left: 10px;
+                background-color: rgba(0, 0, 0, 0.5);
+                color: #fff;
+                padding: 5px;
+                transform: skew(-10deg);
+                font-family: 'Courier New', Courier, monospace
+            }
+        </style>
+        <script src="https://cdn.rawgit.com/openlayers/openlayers.github.io/master/en/v5.3.0/build/ol.js"></script>
+        <title>Interactive Antipodes</title>
+    </head>
+
+    <body>
+        <div id="map" class="map"></div>
+        <div id="creds">Omar Alshaker 2019</div>
+        <div id="description">Find your antipode: see where you'd end up if you dig really deep</div>
+        <script type="text/javascript">
+            const viewport = document.getElementById('map');
+            const minZoom = 2;
+
+            function flipCoords(lon, lat) {
+                return [
+                    lon < 0 ? (Math.abs(lon) - 180) * -1 : Math.abs(lon) - 180,
+                    -lat
+                ];
+            }
+            const source = new ol.source.Vector({
+                wrapX: true
+            });
+
+            const layer = new ol.layer.Vector({
+                source
+            });
+
+            const feature = new ol.Feature({
+                type: 'icon',
+                geometry: new ol.geom.Point([44, 33])
+            });
+
+            feature.setStyle(
+                new ol.style.Style({
+                    image: new ol.style.Icon({
+                        anchor: [0.5, 1],
+                        src: 'pin-out.png'
+                    })
+                })
+            );
+
+            source.addFeature(feature);
+
+            const map = new ol.Map({
+                target: 'map',
+
+                layers: [
+                    new ol.layer.Tile({
+                        source: new ol.source.OSM({ wrapX: true })
+                    }),
+                    layer
+                ],
+                view: new ol.View({
+                    minZoom,
+                    center: [0, 0],
+                    zoom: minZoom,
+                    projection: 'EPSG:4326'
+                })
+            });
+
+            map.on('pointermove', ev => {
+                const c = ev.coordinate;
+                const antipode = flipCoords(...c);
+                const g = feature.getGeometry();
+                feature.getGeometry().setCoordinates(antipode);
+            });
+        </script>
+    </body>
+</html>
