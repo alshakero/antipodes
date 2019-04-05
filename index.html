@@ -125,18 +125,15 @@
                 }
                 const d =
                     response.namedetails['name:en'] || response.display_name;
-                if (typeof d === 'object') {
-                    debugger;
-                }
                 return d;
             }
             async function getCountries(loc1, loc2) {
-                const inCountry = await fetch(locationToAPIURL(loc1)).then(r =>
-                    r.json()
-                );
-                const outCountry = await fetch(locationToAPIURL(loc2)).then(r =>
-                    r.json()
-                );
+                const inCountry = await fetch(locationToAPIURL(loc1), {
+                    mode: 'cors'
+                }).then(r => r.json());
+                const outCountry = await fetch(locationToAPIURL(loc2), {
+                    mode: 'cors'
+                }).then(r => r.json());
                 return [getName(inCountry), getName(outCountry)];
             }
 
@@ -218,7 +215,6 @@
                 clearTimeout(debouceRef);
                 debouceRef = setTimeout(async () => {
                     const countries = await getCountries(c, antipode);
-                    console.log(countries);
                     fromCountry.textContent = countries[0];
                     toCountry.textContent = countries[1];
                 }, 50);
@@ -235,7 +231,6 @@
                 dataLayer.push(arguments);
             }
             gtag('js', new Date());
-
             gtag('config', 'UA-56638680-8');
         </script>
     </body>
