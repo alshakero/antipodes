@@ -123,9 +123,10 @@
                 if (response.error) {
                     return 'Probably some ocean';
                 }
-                const d = response.namedetails['name:en'] || response.display_name;
-                if(typeof d === 'object') {
-                    debugger
+                const d =
+                    response.namedetails['name:en'] || response.display_name;
+                if (typeof d === 'object') {
+                    debugger;
                 }
                 return d;
             }
@@ -217,11 +218,25 @@
                 clearTimeout(debouceRef);
                 debouceRef = setTimeout(async () => {
                     const countries = await getCountries(c, antipode);
-                    console.log(countries)
+                    console.log(countries);
                     fromCountry.textContent = countries[0];
                     toCountry.textContent = countries[1];
                 }, 50);
             });
+        </script>
+        <!-- Global site tag (gtag.js) - Google Analytics -->
+        <script
+            async
+            src="https://www.googletagmanager.com/gtag/js?id=UA-56638680-8"
+        ></script>
+        <script>
+            window.dataLayer = window.dataLayer || [];
+            function gtag() {
+                dataLayer.push(arguments);
+            }
+            gtag('js', new Date());
+
+            gtag('config', 'UA-56638680-8');
         </script>
     </body>
 </html>
