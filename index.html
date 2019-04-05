@@ -229,7 +229,9 @@
                 const layer = new ol.layer.Vector({
                     source: countriesSource
                 });
-
+                
+                layer.setOpacity(0);
+                
                 map.addLayer(layer);
             });
         </script>
