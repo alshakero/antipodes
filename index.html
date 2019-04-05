@@ -106,35 +106,15 @@
             <span id="fromCountry"></span> -> <span id="toCountry"></span>
         </div>
         <script type="text/javascript">
+            async function getCountriesPolygons() {
+                const data = await fetch('data.json').then(res => res.json());
+                const featureSet = new ol.format.GeoJSON().readFeatures(data);
+                return featureSet;
+            }
+
             function getMinZoom() {
                 var width = document.querySelector('#map').clientWidth;
                 return Math.ceil(Math.LOG2E * Math.log(width / 256));
-            }
-
-            function locationToAPIURL(loc) {
-                return `https://nominatim.openstreetmap.org/reverse?format=xml&lat=${
-                    loc[1]
-                }&lon=${
-                    loc[0]
-                }&zoom=18&addressdetails=0&zoom=0&format=json&accept-language=en-gbm&namedetails=1`;
-            }
-
-            function getName(response) {
-                if (response.error) {
-                    return 'Probably some ocean';
-                }
-                const d =
-                    response.namedetails['name:en'] || response.display_name;
-                return d;
-            }
-            async function getCountries(loc1, loc2) {
-                const inCountry = await fetch(locationToAPIURL(loc1), {
-                    mode: 'cors'
-                }).then(r => r.json());
-                const outCountry = await fetch(locationToAPIURL(loc2), {
-                    mode: 'cors'
-                }).then(r => r.json());
-                return [getName(inCountry), getName(outCountry)];
             }
 
             const viewport = document.getElementById('map');
@@ -203,21 +183,54 @@
             });
             let debouceRef;
 
-            map.on(['pointermove', 'singleclick'], ev => {
-                const c = ev.coordinate;
+            map.on(
+                ['pointermove', 'singleclick'],
+                ev => {
+                    const c = ev.coordinate;
 
-                inFeature.getGeometry().setCoordinates(c);
+                    inFeature.getGeometry().setCoordinates(c);
 
-                const antipode = flipCoords(...c);
-                const g = outFeature.getGeometry();
-                outFeature.getGeometry().setCoordinates(antipode);
+                    const antipode = flipCoords(...c);
+                    const g = outFeature.getGeometry();
+                    outFeature.getGeometry().setCoordinates(antipode);
+                    antiPixel = map.getPixelFromCoordinate(antipode);
 
-                clearTimeout(debouceRef);
-                debouceRef = setTimeout(async () => {
-                    const countries = await getCountries(c, antipode);
-                    fromCountry.textContent = countries[0];
-                    toCountry.textContent = countries[1];
-                }, 50);
+                    clearTimeout(debouceRef);
+                    debouceRef = setTimeout(async () => {
+                        let setFrom;
+                        map.forEachFeatureAtPixel(ev.pixel, function(feature) {
+                            fromCountry.textContent = feature.values_.admin;
+                            setFrom = true;
+                        });
+                        if (!setFrom) {
+                            fromCountry.textContent = 'Probably some ocean';
+                        }
+
+                        let setTo = false;
+                        map.forEachFeatureAtPixel(antiPixel, function(feature) {
+                            toCountry.textContent = feature.values_.admin;
+                            setTo = true;
+                            return true;
+                        });
+                        if (!setTo) {
+                            toCountry.textContent = 'Probably some ocean';
+                        }
+                    });
+                },
+                50
+            );
+
+            getCountriesPolygons().then(countriesFeatues => {
+                const countriesSource = new ol.source.Vector({
+                    wrapX: false,
+                    features: countriesFeatues
+                });
+
+                const layer = new ol.layer.Vector({
+                    source: countriesSource
+                });
+
+                map.addLayer(layer);
             });
         </script>
         <!-- Global site tag (gtag.js) - Google Analytics -->
